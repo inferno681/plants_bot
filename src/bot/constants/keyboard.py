@@ -1,0 +1,8 @@
+ADD_PLANT = 'Добавить растение'
+DELETE_PLANT = 'Удалить растение'
+CHECK_PLANT = 'Посмотреть растение'
+CHECK_PLANTS = 'Мои растения'
+MAIN_KB_PLACEHOLDER = 'Выберите пункт меню...'
+CANCEL = 'Отмена'
+SKIP = 'Пропустить'
+BACK = 'Назад'

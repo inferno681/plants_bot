@@ -1,0 +1,35 @@
+from aiogram import F, Router
+from aiogram.types import Message
+
+from bot.constants import CHECK_PLANTS
+from bot.constants.check_plant import PLANT_INFO_LINE
+from bot.keyboard import get_main_kb
+from bot.model import Plant
+
+router = Router(name='check_plants_router')
+
+
+@router.message(F.text == CHECK_PLANTS)
+async def cmd_check_all(message: Message) -> None:
+    """Check all plants handler."""
+    plants = await Plant.find_many(
+        Plant.user_id == message.from_user.id
+    ).to_list()
+    if not plants:
+        await message.answer(
+            'Растения не отслеживаются', reply_markup=get_main_kb()
+        )
+        return
+
+    lines = []
+    for num, plant in enumerate(plants, start=1):
+        lines.append(
+            PLANT_INFO_LINE.format(
+                pos=num,
+                name=plant.name,
+                watering=plant.last_watered_at,
+                fertilizing=plant.last_fertilized_at,
+            )
+        )
+    text = '\n'.join(lines)
+    await message.answer(text, reply_markup=get_main_kb())
