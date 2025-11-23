@@ -17,7 +17,7 @@ from bot.constants.message import (
 )
 from bot.keyboard import get_cancel_kb, get_main_kb
 from bot.log_message import BACK_ERROR_LOG
-from bot.model import User
+from bot.models import User
 from bot.states import AddPlant
 from bot.utils import save_plant
 

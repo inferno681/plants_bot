@@ -11,7 +11,7 @@ from bot.constants import (
 )
 from bot.constants.constants import DELETE_CANCELED_MSG
 from bot.keyboard import get_keyboard_with_navigation, get_main_kb
-from bot.model import Plant
+from bot.models import Plant
 from bot.states import DeletePlant
 from config import config
 

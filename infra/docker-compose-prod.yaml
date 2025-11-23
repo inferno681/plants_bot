@@ -1,0 +1,12 @@
+services:
+  swiss_bro_bot:
+    container_name: plants_bot
+    image: inferno681/plants_bot:latest
+    init: true
+    restart: always
+    volumes:
+      - ./config.yaml:/app/src/config/config.yaml
+    env_file:
+      - .env
+    ports:
+      - 9070:8000

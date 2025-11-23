@@ -15,7 +15,7 @@ from bot.keyboard import (
     get_cancel_kb,
     get_main_kb,
 )
-from bot.model import FertilizingType, FrequencyType, Plant
+from bot.models import FertilizingType, FrequencyType, Plant
 from bot.states import AddPlant, set_next_state
 from bot.utils import (
     DateFilter,

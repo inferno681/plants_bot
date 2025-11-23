@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from bot.model import (
+from bot.models import (
     FertilizingPeriod,
     FertilizingType,
     FrequencyType,

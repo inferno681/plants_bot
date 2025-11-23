@@ -18,7 +18,7 @@ from bot.log_message import (
     START_PRICE_UPDATE_LOG,
     WATERING_NOTIFICATIONS_SEND_RESULT,
 )
-from bot.model import Plant
+from bot.models import Plant
 from config import config
 
 log = getLogger(__name__)

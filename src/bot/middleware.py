@@ -11,7 +11,7 @@ from bot.log_message import (
     NOT_PRIVATE_CHAT_LOG,
     UNAUTHORIZED_ACCESS_LOG,
 )
-from bot.model import User
+from bot.models import User
 
 
 class UserOnlyMiddleware(BaseMiddleware):

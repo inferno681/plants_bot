@@ -14,10 +14,6 @@ class ServiceSettings(BaseModel):
     webhook_path: str
     base_webhook_url: str
     page_size: int
-    goto_timeout: int
-    wait_timeout: int
-    currency_rate_source: str
-    rate_data_ttl: int
 
 
 class MongoSettings(BaseModel):

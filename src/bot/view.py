@@ -1,7 +1,7 @@
 from datetime import date
 
 from bot.keyboard import DAYS_OF_WEEK
-from bot.model import FertilizingType, FrequencyType, Plant
+from bot.models import FertilizingType, FrequencyType, Plant
 
 
 def format_date(date: date | None) -> str:

@@ -8,7 +8,7 @@ from bot.constants import (
     add_plant,
 )
 from bot.keyboard import DayCallback, days_kb, frequency_type_kb, get_cancel_kb
-from bot.model import FrequencyType
+from bot.models import FrequencyType
 from bot.states import AddPlant
 
 

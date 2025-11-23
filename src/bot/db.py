@@ -1,7 +1,7 @@
 from beanie import init_beanie
 from pymongo import AsyncMongoClient
 
-from bot.model import Plant, User
+from bot.models import Plant, User
 from config import config
 
 client: AsyncMongoClient = AsyncMongoClient(config.mongo_url)

@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery
 from beanie import PydanticObjectId
 
 from bot.keyboard import PlantActionCallback
-from bot.model import Plant
+from bot.models import Plant
 
 router = Router(name='notification_router')
 

@@ -25,7 +25,7 @@ from bot.constants import (
     PREV_PAGE_BUTTON,
     SKIP,
 )
-from bot.model import Plant
+from bot.models import Plant
 
 
 def days_kb(selected: list[int] | None = None, single_choice=False):

@@ -4,7 +4,7 @@ from aiogram.types import Message
 from bot.constants import CHECK_PLANTS
 from bot.constants.check_plant import PLANT_INFO_LINE
 from bot.keyboard import get_main_kb
-from bot.model import Plant
+from bot.models import Plant
 
 router = Router(name='check_plants_router')
 

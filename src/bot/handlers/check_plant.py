@@ -6,7 +6,7 @@ from bot.callback import Action, ChoicePlantCallback
 from bot.constants import CHECK_PLANT, PAGINATION_MESSAGE_INFO, check_plant
 from bot.constants.constants import CHECK_CANCELED_MSG
 from bot.keyboard import get_keyboard_with_navigation, get_main_kb
-from bot.model import Plant
+from bot.models import Plant
 from bot.states import PlantInfo
 from bot.view import format_plant_message_html
 from config import config
