@@ -60,7 +60,7 @@ class DateFilter(BaseFilter):
             return False
 
         if not (1 <= month <= 12):
-            await message.answer(DATE_BAD_MONTH_RANGE.format(month))
+            await message.answer(DATE_BAD_MONTH_RANGE.format(month=month))
             return False
 
         try:
