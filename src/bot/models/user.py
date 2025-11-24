@@ -1,13 +1,6 @@
 from datetime import datetime, timezone
 
-
-from beanie import (
-    Document,
-    Insert,
-    Replace,
-    SaveChanges,
-    before_event,
-)
+from beanie import Document, Insert, Replace, SaveChanges, before_event
 
 
 class User(Document):

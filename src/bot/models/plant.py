@@ -109,7 +109,7 @@ class FertilizingType(StrEnum):
     months = auto()
 
     @classmethod
-    def get_text_map(cls) -> dict[str, str]:
+    def get_text_map(cls) -> dict['FertilizingType', str]:
         """Return values for buttons."""
         return {
             cls.days: 'Один раз в n дней',
@@ -143,6 +143,8 @@ class FertilizingPeriod(BaseModel):
     def as_period(self) -> tuple[date, date]:
         """Convert values to dates."""
         current_year = date.today().year
+        if not self.start or not self.end:
+            raise ValueError('No start or end for period')
         start = self.start.as_date(current_year)
         end = self.end.as_date(current_year)
         if start < end:
@@ -195,9 +197,9 @@ class Plant(Document):
         end = datetime.combine(today, datetime.max.time())
 
         return await cls.find(
-            (cls.next_watering_at >= start),
-            (cls.next_watering_at <= end),
-            ((cls.last_watered_at < start)),
+            (cls.next_watering_at >= start),  # type: ignore[operator]
+            (cls.next_watering_at <= end),  # type: ignore[operator]
+            ((cls.last_watered_at < start)),  # type: ignore[operator]
         ).to_list()
 
     @classmethod
