@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import pytest
 
-from bot.constants.add_plant import NO_PHOTO_MSG
-from bot.constants.error import DATE_BAD_FORMAT
 from bot.constants import (
     DATE_BAD_DAY_RANGE,
     DATE_BAD_MONTH_RANGE,
     DATE_INVALID_DAY_IN_MONTH,
 )
-from bot.utils.filters import DateFilter, PhotoRequiredFilter, TextRequiredFilter
+from bot.constants.add_plant import NO_PHOTO_MSG
+from bot.constants.error import DATE_BAD_FORMAT
 from bot.states import AddPlant
+from bot.utils.filters import (
+    DateFilter,
+    PhotoRequiredFilter,
+    TextRequiredFilter,
+)
 from tests.fakes import FakeFSMContext, FakeMessage
 
 
@@ -62,4 +66,7 @@ async def test_date_filter_validates_format():
 
     message.text = '31-02'
     result = await filter_(message)
-    assert DATE_INVALID_DAY_IN_MONTH.format(month=2, day=31) == message.answers[-1][0]
+    assert (
+        DATE_INVALID_DAY_IN_MONTH.format(month=2, day=31)
+        == message.answers[-1][0]
+    )

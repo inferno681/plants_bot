@@ -3,23 +3,21 @@ from __future__ import annotations
 import pytest
 
 from bot.constants import CANCEL, STATE_MESSAGES
+from bot.constants.error import SKIP_ACTION_ERROR_MSG
 from bot.constants.message import (
     DESCRIPTION_SKIP_MSG,
     FIRST_STEP_MSG,
     PHOTO_SKIP_MSG,
 )
-from bot.constants.error import SKIP_ACTION_ERROR_MSG
 from bot.handlers.cmd import (
     back_handler,
     cancel_handler,
     command_start_handler,
     skip_handler,
 )
-from bot.states import AddPlant
-from bot.utils import save_plant as real_save_plant
-from config import config
-from tests.fakes import FakeFSMContext, FakeMessage, make_user
 from bot.models import User
+from bot.states import AddPlant
+from tests.fakes import FakeFSMContext, FakeMessage, make_user
 
 
 @pytest.mark.asyncio

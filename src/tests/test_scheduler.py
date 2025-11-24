@@ -3,16 +3,15 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-
-import bot.scheduler as scheduler
 from beanie import PydanticObjectId
 
+import bot.scheduler as scheduler
 from bot.models import (
+    FrequencyType,
+    MonthDay,
     Plant,
     WateringPeriod,
-    MonthDay,
     WateringSchedule,
-    FrequencyType,
 )
 
 

@@ -10,16 +10,16 @@ from bot.keyboard import PlantActionCallback
 from bot.models import (
     FertilizingPeriod,
     FertilizingType,
+    FrequencyType,
     MonthDay,
     Plant,
     WateringPeriod,
     WateringSchedule,
-    FrequencyType,
 )
 
 
 class FakeCallbackMessage:
-    def __init__(self):
+    def __init__(self) -> None:
         self.captions: list[tuple[str, object]] = []
 
     async def edit_caption(self, caption: str, reply_markup=None):

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -22,7 +23,7 @@ from config import config
 
 
 class FakeFSMContext:
-    def __init__(self):
+    def __init__(self) -> None:
         self.state = None
         self.data: dict[str, list] = {}
 
@@ -45,8 +46,8 @@ class FakeMessage:
         self.from_user = SimpleNamespace(id=user_id)
         self.answers: list[str] = []
         self.deleted = False
-        self.edited_markup = []
-        self.edited_text = []
+        self.edited_markup: list[Any] = []
+        self.edited_text: list[str] = []
 
     async def answer(self, text: str, reply_markup=None):
         self.answers.append(text)

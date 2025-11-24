@@ -25,7 +25,7 @@ def make_user(
 
 
 class FakeFSMContext:
-    def __init__(self):
+    def __init__(self) -> None:
         self._state: str | None = None
         self.data: dict[str, Any] = {}
 

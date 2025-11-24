@@ -1,11 +1,4 @@
-from __future__ import annotations
-
 import asyncio
-from pathlib import Path
-import sys
-
-SRC_DIR = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(SRC_DIR))
 
 import pytest
 import pytest_asyncio
@@ -34,7 +27,7 @@ async def beanie_client():
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def clean_db(beanie_client):  # noqa: PT004
-    for model in (Plant, User):
-        await model.delete_all()
+async def clean_db(beanie_client):
+    await Plant.delete_all()
+    await User.delete_all()
     yield

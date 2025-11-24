@@ -30,7 +30,9 @@ def test_require_user_raises_on_none():
 
 def test_require_message_accepts_valid_callback():
     message = build_message()
-    callback = CallbackQuery(id='1', chat_instance='1', from_user=message.from_user, message=message)
+    callback = CallbackQuery(
+        id='1', chat_instance='1', from_user=message.from_user, message=message
+    )
     assert telegram.require_message(callback) is message
 
 

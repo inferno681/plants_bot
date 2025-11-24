@@ -4,6 +4,7 @@ import pytest
 
 import bot.utils.handlers as utils_handlers
 from bot.constants import DAYS_OF_WEEK, NO_DAYS_SELECTED_MSG
+from bot.states import AddPlant
 from bot.utils.handlers import (
     _extract_selected_days,
     _render_selected_days_text,
@@ -13,7 +14,6 @@ from bot.utils.handlers import (
     handle_weekly_days,
     handle_weekly_done,
 )
-from bot.states import AddPlant
 from tests.fakes import FakeFSMContext, FakeMessage
 
 

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import importlib
 from datetime import date
 
 import pytest
-
-import importlib
 
 from bot.callback import Action, ChoicePlantCallback
 from bot.constants import NO_PLANTS_MSG, PLANT_DELETED_MESSAGE
@@ -106,5 +105,8 @@ async def test_delete_handler(monkeypatch):
     callback_data = ChoicePlantCallback(action=Action.delete, name='Lavender')
     await delete_handler(callback, callback_data, state)
 
-    assert PLANT_DELETED_MESSAGE.format(plant_name='Lavender') in message.answers[-1][0]
+    assert (
+        PLANT_DELETED_MESSAGE.format(plant_name='Lavender')
+        in message.answers[-1][0]
+    )
     assert await Plant.find_one(Plant.name == 'Lavender') is None
