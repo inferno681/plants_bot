@@ -6,6 +6,7 @@ from beanie import PydanticObjectId
 
 from bot.keyboard import PlantActionCallback
 from bot.models import Plant
+from bot.utils.telegram import require_message
 
 router = Router(name='notification_router')
 
@@ -24,8 +25,8 @@ async def handle_watering_callback(
         plant.next_fertilizing_date()
         plant.last_fertilized_at = date.today()
     await plant.save()
-    assert callback.message is not None
-    await callback.message.edit_caption(
+    message = require_message(callback)
+    await message.edit_caption(
         caption=f'Растение {plant.name} полито', reply_markup=None
     )
     await callback.answer()

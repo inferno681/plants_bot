@@ -42,5 +42,5 @@ async def set_next_state(state: FSMContext, next_state):
     history = state_data.get('history', [])
     if current_state:
         history.append(current_state)
-    await state.update_data(history=history)
+    await state.update_data({'history': history})
     await state.set_state(next_state)

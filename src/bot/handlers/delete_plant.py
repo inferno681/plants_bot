@@ -13,6 +13,7 @@ from bot.constants.constants import DELETE_CANCELED_MSG
 from bot.keyboard import get_keyboard_with_navigation, get_main_kb
 from bot.models import Plant
 from bot.states import DeletePlant
+from bot.utils.telegram import require_message, require_user
 from config import config
 
 router = Router(name='delete_plant_router')
@@ -20,7 +21,8 @@ router = Router(name='delete_plant_router')
 
 @router.message(F.text == DELETE_PLANT)
 async def cmd_delete_good(message: Message, state: FSMContext):
-    telegram_id = message.from_user.id
+    user = require_user(message.from_user)
+    telegram_id = user.id
     all_ids = await Plant.get_all_ids(telegram_id)
 
     if not all_ids:
@@ -36,7 +38,9 @@ async def cmd_delete_good(message: Message, state: FSMContext):
     plants = await Plant.get_documents_by_ids(telegram_id, pages[current_page])
 
     await state.set_state(DeletePlant.name)
-    await state.update_data(pages=pages, current_page=current_page)
+    await state.update_data(
+        {'pages': pages, 'current_page': current_page}
+    )
     lines = [f'{plant.name} — {plant.last_watered_at}' for plant in plants]
 
     await message.answer(
@@ -55,8 +59,9 @@ async def cmd_delete_good(message: Message, state: FSMContext):
     DeletePlant.name, ChoicePlantCallback.filter(F.action == Action.cancel)
 )
 async def cancel_handler(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
-    await callback.message.answer(
+    message = require_message(callback)
+    await message.delete()
+    await message.answer(
         DELETE_CANCELED_MSG, reply_markup=get_main_kb()
     )
     await state.clear()
@@ -71,11 +76,12 @@ async def prev_handler(callback: CallbackQuery, state: FSMContext):
     pages = pagination_data.get('pages', [])
     current_page = pagination_data.get('current_page', 0)
     current_page -= 1
-    await state.update_data(current_page=current_page)
+    await state.update_data({'current_page': current_page})
     plants = await Plant.get_documents_by_ids(
-        callback.from_user.id, pages[current_page]
+        require_user(callback.from_user).id, pages[current_page]
     )
-    await callback.message.edit_reply_markup(
+    message = require_message(callback)
+    await message.edit_reply_markup(
         reply_markup=get_keyboard_with_navigation(
             plants, current_page, len(pages), Action.delete
         )
@@ -91,11 +97,12 @@ async def next_handler(callback: CallbackQuery, state: FSMContext):
     pages = pagination_data.get('pages', [])
     current_page = pagination_data.get('current_page', 0)
     current_page += 1
-    await state.update_data(current_page=current_page)
+    await state.update_data({'current_page': current_page})
     plants = await Plant.get_documents_by_ids(
-        callback.from_user.id, pages[current_page]
+        require_user(callback.from_user).id, pages[current_page]
     )
-    await callback.message.edit_reply_markup(
+    message = require_message(callback)
+    await message.edit_reply_markup(
         reply_markup=get_keyboard_with_navigation(
             plants, current_page, len(pages), Action.delete
         )
@@ -113,12 +120,14 @@ async def delete_handler(
 ):
     plant_name = callback_data.name
 
+    user = require_user(callback.from_user)
     await Plant.find_one(
-        Plant.user_id == callback.from_user.id, Plant.name == plant_name
+        Plant.user_id == user.id, Plant.name == plant_name
     ).delete_one()
 
-    await callback.message.delete()
-    await callback.message.answer(
+    message = require_message(callback)
+    await message.delete()
+    await message.answer(
         PLANT_DELETED_MESSAGE.format(plant_name=plant_name)
     )
 

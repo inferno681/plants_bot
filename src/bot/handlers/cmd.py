@@ -20,6 +20,7 @@ from bot.log_message import BACK_ERROR_LOG
 from bot.models import User
 from bot.states import AddPlant
 from bot.utils import save_plant
+from bot.utils.telegram import require_user
 
 router = Router(name='cmd_router')
 logger = getLogger(__name__)
@@ -28,7 +29,7 @@ logger = getLogger(__name__)
 @router.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     """Start command handler."""
-    tg_user = message.from_user
+    tg_user = require_user(message.from_user)
     user = await User.find_one(User.user_id == tg_user.id)
     if user is None:
         user = User(
@@ -67,7 +68,7 @@ async def skip_handler(message: Message, state: FSMContext):
     """Skip handler."""
     current_state = await state.get_state()
     if current_state == AddPlant.description:
-        await state.update_data(description=None)
+        await state.update_data({'description': None})
         await message.answer(
             DESCRIPTION_SKIP_MSG,
             reply_markup=get_cancel_kb(back=True, skip=True),
@@ -75,7 +76,7 @@ async def skip_handler(message: Message, state: FSMContext):
         await state.set_state(AddPlant.image)
 
     elif current_state == AddPlant.image:
-        await state.update_data(image=None)
+        await state.update_data({'image': None})
         await message.answer(
             PHOTO_SKIP_MSG,
             reply_markup=get_cancel_kb(back=True),
@@ -84,7 +85,7 @@ async def skip_handler(message: Message, state: FSMContext):
 
     elif current_state == AddPlant.fertilizing_start:
         state_data = await state.get_data()
-        state_data['user_id'] = message.from_user.id
+        state_data['user_id'] = require_user(message.from_user).id
         await save_plant(plant_data=state_data, is_fert=False)
         await message.answer(
             FERTILIZING_SKIP_MSG,
@@ -104,7 +105,7 @@ async def back_handler(message: Message, state: FSMContext):
 
     previous_state = history.pop()
     await state.set_state(previous_state)
-    await state.update_data(history=history)
+    await state.update_data({'history': history})
     state_data = await state.get_data()
 
     try:

@@ -28,6 +28,12 @@ from bot.utils import (
     handle_weekly_done,
     save_plant,
 )
+from bot.utils.telegram import (
+    require_callback_data,
+    require_message,
+    require_text,
+    require_user,
+)
 
 router = Router(name='add_plant_router')
 
@@ -45,15 +51,15 @@ async def add_plat_handler(message: Message, state: FSMContext) -> None:
 @router.message(AddPlant.name, TextRequiredFilter())
 async def process_plant_name(message: Message, state: FSMContext) -> None:
     """Process the plant name sent by the user."""
-    if await Plant.find_one(
-        Plant.user_id == message.from_user.id, Plant.name == message.text
-    ):
+    user = require_user(message.from_user)
+    name = require_text(message)
+    if await Plant.find_one(Plant.user_id == user.id, Plant.name == name):
         await message.answer(
             add_plant.NOT_UNIQUE_NAME_MSG,
             reply_markup=get_cancel_kb(back=True),
         )
         return
-    await state.update_data(name=message.text)
+    await state.update_data({'name': name})
 
     await message.answer(
         add_plant.ASK_DESCRIPTION_MSG,
@@ -67,7 +73,7 @@ async def process_plant_description(
     message: Message, state: FSMContext
 ) -> None:
     """Process the description of the plant."""
-    await state.update_data(description=message.text)
+    await state.update_data({'description': require_text(message)})
     await message.answer(
         add_plant.ASK_PHOTO_MSG,
         reply_markup=get_cancel_kb(back=True, skip=True),
@@ -78,8 +84,11 @@ async def process_plant_description(
 @router.message(AddPlant.image, PhotoRequiredFilter())
 async def process_plant_photo(message: Message, state: FSMContext):
     """Process plant photo and save by file_id."""
-    file_id = message.photo[-1].file_id
-    await state.update_data(image=file_id)
+    photos = message.photo or []
+    if not photos:
+        raise ValueError('Photo is required for this state.')
+    file_id = photos[-1].file_id
+    await state.update_data({'image': file_id})
     await message.answer(
         add_plant.ASK_WARM_PERIOD_START_MSG,
         reply_markup=get_cancel_kb(back=True),
@@ -92,7 +101,7 @@ async def process_warm_start(
     message: Message, state: FSMContext, day: int, month: int
 ):
     """Process the start date of the warm period."""
-    await state.update_data(warm_start={'day': day, 'month': month})
+    await state.update_data({'warm_start': {'day': day, 'month': month}})
     await message.answer(
         add_plant.ASK_WARM_PERIOD_END_MSG,
         reply_markup=get_cancel_kb(back=True),
@@ -115,7 +124,7 @@ async def process_warm_end(
         await message.answer(add_plant.INVALID_END_DATE_MSG)
         return
 
-    await state.update_data(warm_end={'day': day, 'month': month})
+    await state.update_data({'warm_end': {'day': day, 'month': month}})
 
     await message.answer(
         add_plant.ASK_WATERING_FREQUENCY_WARM_MSG,
@@ -205,7 +214,9 @@ async def process_fertilizing_start(
     message: Message, state: FSMContext, day: int, month: int
 ):
     """Process the start date of fertilizing."""
-    await state.update_data(fertilizing_start={'day': day, 'month': month})
+    await state.update_data(
+        {'fertilizing_start': {'day': day, 'month': month}}
+    )
     await message.answer(
         add_plant.ASK_FERTILIZING_PERIOD_END_MSG,
         reply_markup=get_cancel_kb(back=True),
@@ -231,7 +242,9 @@ async def process_fertilizing_stop(
         await message.answer(add_plant.INVALID_END_DATE_MSG)
         return
 
-    await state.update_data(fertilizing_end={'day': day, 'month': month})
+    await state.update_data(
+        {'fertilizing_end': {'day': day, 'month': month}}
+    )
 
     await message.answer(
         add_plant.ASK_FERTILIZING_FREQUENCY_MSG,
@@ -250,18 +263,19 @@ async def process_fertilizing_frequency_type(
     callback: CallbackQuery, state: FSMContext
 ):
     """Process the fertilizing frequency type."""
-    fertilizing_type = FertilizingType[callback.data]
+    data = require_callback_data(callback)
+    fertilizing_type = FertilizingType[data]
 
-    await state.update_data(fertilizing_frequency_type=fertilizing_type.value)
+    await state.update_data(
+        {'fertilizing_frequency_type': fertilizing_type.value}
+    )
 
-    cfg = FERTILIZING_INTERVAL_CONFIG[callback.data]
+    cfg = FERTILIZING_INTERVAL_CONFIG[data]
     message = add_plant.ASK_FERTILIZING_INTERVAL_MESSAGE.format(
         interval=cfg['interval_text']
     )
-
-    await callback.message.answer(
-        message, reply_markup=get_cancel_kb(back=True)
-    )
+    callback_message = require_message(callback)
+    await callback_message.answer(message, reply_markup=get_cancel_kb(back=True))
     await set_next_state(state, cfg['state'])
     await callback.answer()
 
@@ -276,13 +290,13 @@ async def process_fertilizing_frequency_type(
 )
 async def process_fertilizing_interval(message: Message, state: FSMContext):
     """Обрабатывает ввод числа для удобрения."""
-    value = int(message.text)
+    value = int(require_text(message))
     if value <= 0:
         await message.answer(NO_POSITIVE_INT_MSG)
         return
 
     state_data = await state.get_data()
-    state_data['user_id'] = message.from_user.id
+    state_data['user_id'] = require_user(message.from_user).id
     state_data['fertilizing_frequency'] = value
     await save_plant(plant_data=state_data, is_fert=True)
     await message.answer('Растение добавлено.', reply_markup=get_main_kb())

@@ -61,6 +61,15 @@ async def watering_notifications():
 
 async def send_watering_notification(plant: Plant) -> bool:
     """Send watering notification."""
+    if bot is None:
+        log.error('Bot instance is not set.')
+        return False
+
+    plant_id = plant.id
+    if plant_id is None:
+        log.error('Plant id is missing for watering notification.')
+        return False
+
     is_fert = plant.sync_watering_and_fertilizing()
     text = WATERING_SCHEDULED_MESSAGE.format(
         fert='и удобрить' if is_fert else '', name=plant.name
@@ -69,7 +78,7 @@ async def send_watering_notification(plant: Plant) -> bool:
     params = dict(
         chat_id=plant.user_id,
         parse_mode='HTML',
-        reply_markup=watering_kb(idx=plant.id, is_fertilized=is_fert),
+        reply_markup=watering_kb(idx=plant_id, is_fertilized=is_fert),
     )
     try:
         if plant.image:

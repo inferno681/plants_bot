@@ -5,6 +5,7 @@ from bot.constants import CHECK_PLANTS
 from bot.constants.check_plant import PLANT_INFO_LINE
 from bot.keyboard import get_main_kb
 from bot.models import Plant
+from bot.utils.telegram import require_user
 
 router = Router(name='check_plants_router')
 
@@ -12,9 +13,8 @@ router = Router(name='check_plants_router')
 @router.message(F.text == CHECK_PLANTS)
 async def cmd_check_all(message: Message) -> None:
     """Check all plants handler."""
-    plants = await Plant.find_many(
-        Plant.user_id == message.from_user.id
-    ).to_list()
+    user = require_user(message.from_user)
+    plants = await Plant.find_many(Plant.user_id == user.id).to_list()
     if not plants:
         await message.answer(
             'Растения не отслеживаются', reply_markup=get_main_kb()

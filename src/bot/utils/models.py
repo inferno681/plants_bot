@@ -1,4 +1,6 @@
+from collections.abc import Mapping
 from datetime import date, timedelta
+from typing import Any
 
 from bot.models import (
     FertilizingPeriod,
@@ -31,26 +33,70 @@ def cold_period(warm_start: MonthDay, warm_end: MonthDay, year: int):
     )
 
 
-async def save_plant(plant_data: dict, is_fert: bool):
+def _require_mapping(value: Any, field_name: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f'Field "{field_name}" must be a mapping.')
+    return value
+
+
+def _require_str(value: Any, field_name: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f'Field "{field_name}" must be a string.')
+    return value
+
+
+def _require_int(value: Any, field_name: str) -> int:
+    if not isinstance(value, int):
+        raise ValueError(f'Field "{field_name}" must be an int.')
+    return value
+
+
+def _get_weekday_choice(value: Any) -> set[int] | int | None:
+    if value is None:
+        return None
+    if isinstance(value, set):
+        return {int(day) for day in value}
+    if isinstance(value, list):
+        return {int(day) for day in value}
+    if isinstance(value, int):
+        return value
+    raise ValueError('Weekday choice has unexpected format.')
+
+
+async def save_plant(plant_data: Mapping[str, Any], is_fert: bool):
     """Plant save method."""
     today = date.today()
     cold_start, cold_end = cold_period(
-        warm_start=MonthDay(**plant_data.get('warm_start')),
-        warm_end=MonthDay(**plant_data.get('warm_end')),
+        warm_start=MonthDay(
+            **_require_mapping(plant_data.get('warm_start'), 'warm_start')
+        ),
+        warm_end=MonthDay(
+            **_require_mapping(plant_data.get('warm_end'), 'warm_end')
+        ),
         year=today.year,
     )
     plant = Plant(
-        user_id=plant_data.get('user_id'),
-        name=plant_data.get('name'),
+        user_id=_require_int(plant_data.get('user_id'), 'user_id'),
+        name=_require_str(plant_data.get('name'), 'name'),
         description=plant_data.get('description'),
         image=plant_data.get('image'),
         warm_period=WateringPeriod(
-            start=MonthDay(**plant_data.get('warm_start')),
-            end=MonthDay(**plant_data.get('warm_end')),
+            start=MonthDay(
+                **_require_mapping(plant_data.get('warm_start'), 'warm_start')
+            ),
+            end=MonthDay(
+                **_require_mapping(plant_data.get('warm_end'), 'warm_end')
+            ),
             schedule=WateringSchedule(
-                type=FrequencyType(plant_data.get('warm_freq_type')),
-                weekday=plant_data.get("warm_freq_days")
-                or plant_data.get("warm_freq_day"),
+                type=FrequencyType(
+                    _require_str(
+                        plant_data.get('warm_freq_type'), 'warm_freq_type'
+                    )
+                ),
+                weekday=_get_weekday_choice(
+                    plant_data.get("warm_freq_days")
+                    or plant_data.get("warm_freq_day")
+                ),
                 monthday=plant_data.get("warm_freq_day_of_month"),
             ),
         ),
@@ -58,9 +104,15 @@ async def save_plant(plant_data: dict, is_fert: bool):
             start=cold_start,
             end=cold_end,
             schedule=WateringSchedule(
-                type=FrequencyType(plant_data.get('cold_freq_type')),
-                weekday=plant_data.get("cold_freq_days")
-                or plant_data.get("cold_freq_day"),
+                type=FrequencyType(
+                    _require_str(
+                        plant_data.get('cold_freq_type'), 'cold_freq_type'
+                    )
+                ),
+                weekday=_get_weekday_choice(
+                    plant_data.get("cold_freq_days")
+                    or plant_data.get("cold_freq_day")
+                ),
                 monthday=plant_data.get("cold_freq_day_of_month"),
             ),
         ),
@@ -69,10 +121,26 @@ async def save_plant(plant_data: dict, is_fert: bool):
     )
     if is_fert:
         plant.fertilizing = FertilizingPeriod(
-            start=MonthDay(**plant_data.get('fertilizing_start')),
-            end=MonthDay(**plant_data.get('fertilizing_end')),
-            type=FertilizingType(plant_data.get('fertilizing_frequency_type')),
-            frequency=plant_data.get('fertilizing_frequency'),
+            start=MonthDay(
+                **_require_mapping(
+                    plant_data.get('fertilizing_start'), 'fertilizing_start'
+                )
+            ),
+            end=MonthDay(
+                **_require_mapping(
+                    plant_data.get('fertilizing_end'), 'fertilizing_end'
+                )
+            ),
+            type=FertilizingType(
+                _require_str(
+                    plant_data.get('fertilizing_frequency_type'),
+                    'fertilizing_frequency_type',
+                )
+            ),
+            frequency=_require_int(
+                plant_data.get('fertilizing_frequency'),
+                'fertilizing_frequency',
+            ),
         )
         start_fert, end_fert = plant.fertilizing.as_period()
         if start_fert <= today <= end_fert:
