@@ -12,6 +12,9 @@ from bot.models import (
     WateringSchedule,
 )
 
+WARM_START_KEY = 'warm_start'
+WARM_END_KEY = 'warm_end'
+
 
 def cold_period(warm_start: MonthDay, warm_end: MonthDay, year: int):
     """Cold period from warm period."""
@@ -33,33 +36,33 @@ def cold_period(warm_start: MonthDay, warm_end: MonthDay, year: int):
     )
 
 
-def _require_mapping(value: Any, field_name: str) -> Mapping[str, Any]:
-    if not isinstance(value, Mapping):
+def _require_mapping(raw_value: Any, field_name: str) -> Mapping[str, Any]:
+    if not isinstance(raw_value, Mapping):
         raise ValueError(f'Field "{field_name}" must be a mapping.')
-    return value
+    return raw_value
 
 
-def _require_str(value: Any, field_name: str) -> str:
-    if not isinstance(value, str):
+def _require_str(raw_value: Any, field_name: str) -> str:
+    if not isinstance(raw_value, str):
         raise ValueError(f'Field "{field_name}" must be a string.')
-    return value
+    return raw_value
 
 
-def _require_int(value: Any, field_name: str) -> int:
-    if not isinstance(value, int):
+def _require_int(raw_value: Any, field_name: str) -> int:
+    if not isinstance(raw_value, int):
         raise ValueError(f'Field "{field_name}" must be an int.')
-    return value
+    return raw_value
 
 
-def _get_weekday_choice(value: Any) -> set[int] | int | None:
-    if value is None:
+def _get_weekday_choice(raw_choice: Any) -> set[int] | int | None:
+    if raw_choice is None:
         return None
-    if isinstance(value, set):
-        return {int(day) for day in value}
-    if isinstance(value, list):
-        return {int(day) for day in value}
-    if isinstance(value, int):
-        return value
+    if isinstance(raw_choice, set):
+        return {int(day) for day in raw_choice}
+    if isinstance(raw_choice, list):
+        return {int(day) for day in raw_choice}
+    if isinstance(raw_choice, int):
+        return raw_choice
     raise ValueError('Weekday choice has unexpected format.')
 
 
@@ -68,10 +71,16 @@ async def save_plant(plant_data: Mapping[str, Any], is_fert: bool):
     today = date.today()
     cold_start, cold_end = cold_period(
         warm_start=MonthDay(
-            **_require_mapping(plant_data.get('warm_start'), 'warm_start')
+            **_require_mapping(
+                plant_data.get(WARM_START_KEY),
+                WARM_START_KEY,
+            )
         ),
         warm_end=MonthDay(
-            **_require_mapping(plant_data.get('warm_end'), 'warm_end')
+            **_require_mapping(
+                plant_data.get(WARM_END_KEY),
+                WARM_END_KEY,
+            )
         ),
         year=today.year,
     )
@@ -82,10 +91,16 @@ async def save_plant(plant_data: Mapping[str, Any], is_fert: bool):
         image=plant_data.get('image'),
         warm_period=WateringPeriod(
             start=MonthDay(
-                **_require_mapping(plant_data.get('warm_start'), 'warm_start')
+                **_require_mapping(
+                    plant_data.get(WARM_START_KEY),
+                    WARM_START_KEY,
+                )
             ),
             end=MonthDay(
-                **_require_mapping(plant_data.get('warm_end'), 'warm_end')
+                **_require_mapping(
+                    plant_data.get(WARM_END_KEY),
+                    WARM_END_KEY,
+                )
             ),
             schedule=WateringSchedule(
                 type=FrequencyType(

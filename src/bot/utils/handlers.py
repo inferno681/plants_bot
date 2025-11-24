@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import Any
 
 from aiogram.fsm.context import FSMContext
@@ -19,26 +20,43 @@ from bot.utils.telegram import (
 )
 
 
+def _extract_selected_days(
+    state_data: Mapping[str, Any],
+    key: str,
+) -> list[int]:
+    raw_selected = state_data.get(key, [])
+    if isinstance(raw_selected, set):
+        return list(raw_selected)
+    if isinstance(raw_selected, list):
+        return list(raw_selected)
+    return []
+
+
+def _render_selected_days_text(days: list[int]) -> str:
+    days_str = ', '.join(DAYS_OF_WEEK[day] for day in sorted(days))
+    return add_plant.SELECTED_DAYS_MSG.format(days_str=days_str)
+
+
 async def handle_frequency_choice(
     callback: CallbackQuery, state: FSMContext, prefix: str
 ):
     """Frequency choice (weekly / biweekly / monthly)."""
-    data = require_callback_data(callback)
-    freq_type = FrequencyType[data]
+    callback_payload = require_callback_data(callback)
+    freq_type = FrequencyType[callback_payload]
     await state.update_data({f'{prefix}_freq_type': freq_type.value})
 
-    cfg = WATERING_FREQUENCY_CONFIG[freq_type.value]
+    config = WATERING_FREQUENCY_CONFIG[freq_type.value]
     message = require_message(callback)
-    kb_config: dict[str, Any] | None = cfg['kb']
 
     await message.edit_text(
-        cfg['text'].format(
+        config['text'].format(
             period='тёплого' if prefix == 'warm' else 'холодного'
         ),
-        reply_markup=days_kb(**kb_config) if kb_config else None,
+        reply_markup=(days_kb(**config['kb']) if config['kb'] else None),
     )
-    state_suffix = cfg['state_suffix']
-    await state.set_state(getattr(AddPlant, f'{prefix}_{state_suffix}'))
+    await state.set_state(
+        getattr(AddPlant, f"{prefix}_{config['state_suffix']}")
+    )
     await callback.answer()
 
 
@@ -53,13 +71,7 @@ async def handle_weekly_days(
 
     state_data = await state.get_data()
     key = f'{prefix}_freq_days'
-    raw_selected = state_data.get(key, [])
-    if isinstance(raw_selected, set):
-        selected = list(raw_selected)
-    elif isinstance(raw_selected, list):
-        selected = list(raw_selected)
-    else:
-        selected = []
+    selected = _extract_selected_days(state_data, key)
 
     if day in selected:
         selected.remove(day)
@@ -76,20 +88,14 @@ async def handle_weekly_done(
     callback: CallbackQuery, state: FSMContext, prefix: str
 ):
     """Confirmation of selecting multiple days."""
-    state_data = await state.get_data()
     key = f'{prefix}_freq_days'
-    raw_days = state_data.get(key, [])
-    if isinstance(raw_days, (set, list)):
-        days = list(raw_days)
-    else:
-        days = []
+    days = _extract_selected_days(await state.get_data(), key)
     if not days:
         await callback.answer(NO_DAYS_SELECTED_MSG, show_alert=True)
         return
 
     await state.update_data({key: set(days)})
-    days_str = ', '.join(DAYS_OF_WEEK[day] for day in sorted(days))
-    confirmation_text = add_plant.SELECTED_DAYS_MSG.format(days_str=days_str)
+    confirmation_text = _render_selected_days_text(days)
     message = require_message(callback)
 
     if prefix == 'warm':

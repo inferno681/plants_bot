@@ -18,6 +18,9 @@ from config import config
 
 router = Router(name='delete_plant_router')
 
+PAGES_KEY = 'pages'
+CURRENT_PAGE_KEY = 'current_page'
+
 
 @router.message(F.text == DELETE_PLANT)
 async def cmd_delete_good(message: Message, state: FSMContext):
@@ -38,9 +41,7 @@ async def cmd_delete_good(message: Message, state: FSMContext):
     plants = await Plant.get_documents_by_ids(telegram_id, pages[current_page])
 
     await state.set_state(DeletePlant.name)
-    await state.update_data(
-        {'pages': pages, 'current_page': current_page}
-    )
+    await state.update_data({PAGES_KEY: pages, CURRENT_PAGE_KEY: current_page})
     lines = [f'{plant.name} — {plant.last_watered_at}' for plant in plants]
 
     await message.answer(
@@ -61,9 +62,7 @@ async def cmd_delete_good(message: Message, state: FSMContext):
 async def cancel_handler(callback: CallbackQuery, state: FSMContext):
     message = require_message(callback)
     await message.delete()
-    await message.answer(
-        DELETE_CANCELED_MSG, reply_markup=get_main_kb()
-    )
+    await message.answer(DELETE_CANCELED_MSG, reply_markup=get_main_kb())
     await state.clear()
     await callback.answer()
 
@@ -73,10 +72,10 @@ async def cancel_handler(callback: CallbackQuery, state: FSMContext):
 )
 async def prev_handler(callback: CallbackQuery, state: FSMContext):
     pagination_data = await state.get_data()
-    pages = pagination_data.get('pages', [])
-    current_page = pagination_data.get('current_page', 0)
+    pages = pagination_data.get(PAGES_KEY, [])
+    current_page = pagination_data.get(CURRENT_PAGE_KEY, 0)
     current_page -= 1
-    await state.update_data({'current_page': current_page})
+    await state.update_data({CURRENT_PAGE_KEY: current_page})
     plants = await Plant.get_documents_by_ids(
         require_user(callback.from_user).id, pages[current_page]
     )
@@ -94,10 +93,10 @@ async def prev_handler(callback: CallbackQuery, state: FSMContext):
 )
 async def next_handler(callback: CallbackQuery, state: FSMContext):
     pagination_data = await state.get_data()
-    pages = pagination_data.get('pages', [])
-    current_page = pagination_data.get('current_page', 0)
+    pages = pagination_data.get(PAGES_KEY, [])
+    current_page = pagination_data.get(CURRENT_PAGE_KEY, 0)
     current_page += 1
-    await state.update_data({'current_page': current_page})
+    await state.update_data({CURRENT_PAGE_KEY: current_page})
     plants = await Plant.get_documents_by_ids(
         require_user(callback.from_user).id, pages[current_page]
     )
@@ -127,9 +126,7 @@ async def delete_handler(
 
     message = require_message(callback)
     await message.delete()
-    await message.answer(
-        PLANT_DELETED_MESSAGE.format(plant_name=plant_name)
-    )
+    await message.answer(PLANT_DELETED_MESSAGE.format(plant_name=plant_name))
 
     await state.clear()
     await callback.answer()

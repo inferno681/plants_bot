@@ -242,9 +242,7 @@ async def process_fertilizing_stop(
         await message.answer(add_plant.INVALID_END_DATE_MSG)
         return
 
-    await state.update_data(
-        {'fertilizing_end': {'day': day, 'month': month}}
-    )
+    await state.update_data({'fertilizing_end': {'day': day, 'month': month}})
 
     await message.answer(
         add_plant.ASK_FERTILIZING_FREQUENCY_MSG,
@@ -275,7 +273,10 @@ async def process_fertilizing_frequency_type(
         interval=cfg['interval_text']
     )
     callback_message = require_message(callback)
-    await callback_message.answer(message, reply_markup=get_cancel_kb(back=True))
+    await callback_message.answer(
+        message,
+        reply_markup=get_cancel_kb(back=True),
+    )
     await set_next_state(state, cfg['state'])
     await callback.answer()
 

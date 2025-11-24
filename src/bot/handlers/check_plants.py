@@ -21,15 +21,13 @@ async def cmd_check_all(message: Message) -> None:
         )
         return
 
-    lines = []
-    for num, plant in enumerate(plants, start=1):
-        lines.append(
-            PLANT_INFO_LINE.format(
-                pos=num,
-                name=plant.name,
-                watering=plant.last_watered_at,
-                fertilizing=plant.last_fertilized_at,
-            )
+    lines = '\n'.join(
+        PLANT_INFO_LINE.format(
+            pos=index,
+            name=plant.name,
+            watering=plant.last_watered_at,
+            fertilizing=plant.last_fertilized_at,
         )
-    text = '\n'.join(lines)
-    await message.answer(text, reply_markup=get_main_kb())
+        for index, plant in enumerate(plants, start=1)
+    )
+    await message.answer(lines, reply_markup=get_main_kb())

@@ -15,10 +15,10 @@ def require_message(callback: CallbackQuery) -> Message:
 
 
 def require_callback_data(callback: CallbackQuery) -> str:
-    data = callback.data
-    if data is None:
+    payload = callback.data
+    if payload is None:
         raise ValueError('Callback data is missing.')
-    return data
+    return payload
 
 
 def require_text(message: Message) -> str:

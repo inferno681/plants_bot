@@ -225,8 +225,8 @@ class Plant(Document):
         last_watered = self.last_watered_at or date.today()
         last_watered_dt = datetime.combine(last_watered, datetime.min.time())
 
-        warm_period = self._require_watering_period(self.warm_period)
-        cold_period = self._require_watering_period(self.cold_period)
+        warm_period = _require_watering_period(self.warm_period)
+        cold_period = _require_watering_period(self.cold_period)
         warm_start, warm_end = warm_period.as_period()
         _, cold_end = cold_period.as_period()
 
@@ -240,14 +240,14 @@ class Plant(Document):
             period_end = cold_end
 
         rule = self._build_rrule(
-            self._require_watering_schedule(period.schedule),
+            _require_watering_schedule(period.schedule),
             last_watered_dt,
         )
         next_dt = rule.after(last_watered_dt)
 
         if next_dt.date() > period_end:
             next_rule = self._build_rrule(
-                self._require_watering_schedule(next_period.schedule),
+                _require_watering_schedule(next_period.schedule),
                 datetime.combine(period_end, datetime.min.time()),
             )
             next_dt = next_rule.after(
@@ -259,7 +259,7 @@ class Plant(Document):
 
     def next_fertilizing_date(self) -> date:
         """Calculate new fertilizing date."""
-        fertilizing = self._require_fertilizing_period(self.fertilizing)
+        fertilizing = _require_fertilizing_period(self.fertilizing)
         last_fertilized = self.last_fertilized_at or date.today()
         fert_start, fert_end = fertilizing.as_period()
 
@@ -330,26 +330,29 @@ class Plant(Document):
             UNDEFINED_SCHEDULE_TYPE_ERROR.format(type=schedule.type)
         )
 
-    def _require_watering_period(
-        self, period: WateringPeriod | None
-    ) -> WateringPeriod:
-        if period is None:
-            raise ValueError(NO_SCHEDULE_ERROR)
-        return period
-
-    def _require_watering_schedule(
-        self, schedule: WateringSchedule | None
-    ) -> WateringSchedule:
-        if schedule is None:
-            raise ValueError(NO_SCHEDULE_ERROR)
-        return schedule
-
-    def _require_fertilizing_period(
-        self, period: FertilizingPeriod | None
-    ) -> FertilizingPeriod:
-        if period is None:
-            raise ValueError(NO_SCHEDULE_ERROR)
-        return period
-
     class Settings:
         name = 'plants'
+
+
+def _require_watering_period(
+    period: WateringPeriod | None,
+) -> WateringPeriod:
+    if period is None:
+        raise ValueError(NO_SCHEDULE_ERROR)
+    return period
+
+
+def _require_watering_schedule(
+    schedule: WateringSchedule | None,
+) -> WateringSchedule:
+    if schedule is None:
+        raise ValueError(NO_SCHEDULE_ERROR)
+    return schedule
+
+
+def _require_fertilizing_period(
+    period: FertilizingPeriod | None,
+) -> FertilizingPeriod:
+    if period is None:
+        raise ValueError(NO_SCHEDULE_ERROR)
+    return period
