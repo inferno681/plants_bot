@@ -33,6 +33,29 @@ async def test_command_start_handler_creates_user():
 
 
 @pytest.mark.asyncio
+async def test_command_start_handler_updates_existing_user():
+    existing = User(
+        user_id=303,
+        first_name='Old',
+        last_name='User',
+        username='old',
+        full_name='Old Full',
+        language_code='en',
+        is_premium=None,
+    )
+    await existing.insert()
+    updated_user = make_user(user_id=303, full_name='New Full', username='new')
+    message = FakeMessage(updated_user)
+
+    await command_start_handler(message)
+
+    stored = await User.find_one(User.user_id == existing.user_id)
+    assert stored is not None
+    assert stored.username == 'new'
+    assert stored.full_name == 'New Full'
+
+
+@pytest.mark.asyncio
 async def test_cancel_handler_clears_state():
     message = FakeMessage()
     state = FakeFSMContext()

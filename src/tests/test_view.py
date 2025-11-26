@@ -82,5 +82,11 @@ def test_format_fertilizing():
 def test_format_plant_message_html():
     plant = build_plant()
     html = format_plant_message_html(plant)
-    assert '🌿 <b>Test</b>' in html
-    assert '🌼 <b>Удобрение:</b>' in html
+    assert '\U0001f33f <b>Test</b>' in html
+    assert '\U0001f33c <b>Удобрение:</b>' in html
+
+
+def test_format_schedule_with_single_day_and_empty_fertilizing():
+    schedule = WateringSchedule(type=FrequencyType.weekly, weekday=0)
+    assert 'День недели' in format_schedule(schedule)
+    assert format_fertilizing(None) == '—'

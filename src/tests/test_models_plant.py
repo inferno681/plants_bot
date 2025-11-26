@@ -152,3 +152,82 @@ def test_next_fertilizing_branches():
     plant.fertilizing.type = FertilizingType.months
     plant.fertilizing.frequency = 1
     assert isinstance(plant.next_fertilizing_date(), date)
+
+
+def test_frequency_helpers_and_missing_dates():
+    assert FrequencyType.weekly in FrequencyType.get_weekly_types()
+    assert len(FertilizingType.get_texts_and_callbacks()[0]) > 0
+
+    with pytest.raises(ValueError):
+        WateringPeriod().as_period()
+
+    period = FertilizingPeriod(
+        start=MonthDay(day=1, month=5),
+        end=MonthDay(day=1, month=4),
+    )
+    start, end = period.as_period()
+    assert end.year == start.year + 1
+
+
+@pytest.mark.asyncio
+async def test_find_to_water_today_and_update_hooks():
+    plant = Plant(user_id=7, name='Finder', next_watering_at=date.today())
+    plant.last_watered_at = date(2024, 1, 1)
+    await plant.insert()
+
+    result = await Plant.find_to_water_today()
+    assert result and result[0].name == 'Finder'
+
+    plant.on_update_set_timestamps()
+    assert plant.updated_at is not None
+
+
+def test_next_fertilizing_with_invalid_type():
+    plant = build_plant()
+    plant.fertilizing.type = 'invalid'  # type: ignore[assignment]
+    with pytest.raises(ValueError):
+        plant.next_fertilizing_date()
+
+
+def test_build_rrule_with_set_weekdays():
+    plant = build_plant()
+    schedule = WateringSchedule(
+        type=FrequencyType.weekly,
+        weekday={0, 2},
+    )
+    rule = plant._build_rrule(schedule, datetime.now())
+    assert rule._interval == 1
+
+
+def test_build_rrule_handles_mutated_type():
+    plant = build_plant()
+    schedule = WateringSchedule(type=FrequencyType.weekly, weekday=1)
+    schedule.type = 'biweekly'  # type: ignore[assignment]
+    rule = plant._build_rrule(schedule, datetime.now())
+    assert rule._interval == 2
+
+
+def test_fertilizing_period_requires_bounds():
+    period = FertilizingPeriod()
+    with pytest.raises(ValueError):
+        period.as_period()
+
+
+def test_build_rrule_raises_for_unknown_type(monkeypatch):
+    plant = build_plant()
+
+    class AlwaysFalse:
+        def __eq__(self, other):
+            return False
+
+    monkeypatch.setattr('bot.models.plant.WEEKLY', AlwaysFalse())
+    monkeypatch.setattr('bot.models.plant.MONTHLY', AlwaysFalse())
+
+    schedule = SimpleNamespace(
+        type='unknown',
+        weekday=None,
+        monthday=None,
+        note=None,
+    )
+    with pytest.raises(ValueError):
+        plant._build_rrule(schedule, datetime.now())

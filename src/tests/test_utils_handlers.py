@@ -107,6 +107,50 @@ async def test_handle_biweekly_day(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_handle_weekly_days_remove(monkeypatch):
+    state = FakeFSMContext()
+    await state.update_data({'cold_freq_days': [1, 2]})
+    message = FakeMessage()
+    callback = DummyCallback('data', message)
+    monkeypatch.setattr(utils_handlers, 'require_message', lambda _: message)
+
+    await handle_weekly_days(
+        callback, SimpleNamespace(idx=2), state, prefix='cold'
+    )
+
+    assert state.data['cold_freq_days'] == [1]
+
+
+@pytest.mark.asyncio
+async def test_handle_weekly_done_cold_branch(monkeypatch):
+    state = FakeFSMContext()
+    await state.update_data({'cold_freq_days': {1}})
+    message = FakeMessage()
+    callback = DummyCallback('data', message)
+    monkeypatch.setattr(utils_handlers, 'require_message', lambda _: message)
+
+    await handle_weekly_done(callback, state, prefix='cold')
+
+    assert message.answers
+    assert await state.get_state() == AddPlant.fertilizing_start.state
+
+
+@pytest.mark.asyncio
+async def test_handle_biweekly_day_cold_branch(monkeypatch):
+    state = FakeFSMContext()
+    message = FakeMessage()
+    callback = DummyCallback('data', message)
+    monkeypatch.setattr(utils_handlers, 'require_message', lambda _: message)
+
+    await handle_biweekly_day(
+        callback, SimpleNamespace(idx=4), state, prefix='cold'
+    )
+
+    assert state.data['cold_freq_day'] == 4
+    assert await state.get_state() == AddPlant.fertilizing_start.state
+
+
+@pytest.mark.asyncio
 async def test_handle_day_of_month_validates(monkeypatch):
     state = FakeFSMContext()
     message = FakeMessage(text='abc')
@@ -117,3 +161,16 @@ async def test_handle_day_of_month_validates(monkeypatch):
     message.text = '15'
     await handle_day_of_month(message, state, prefix='warm')
     assert state.data['warm_freq_day_of_month'] == 15
+
+
+@pytest.mark.asyncio
+async def test_handle_day_of_month_invalid_range_and_cold():
+    state = FakeFSMContext()
+    message = FakeMessage(text='40')
+
+    await handle_day_of_month(message, state, prefix='warm')
+    assert 'Число должно быть' in message.answers[-1][0]
+
+    message.text = '5'
+    await handle_day_of_month(message, state, prefix='cold')
+    assert state.data['cold_freq_day_of_month'] == 5

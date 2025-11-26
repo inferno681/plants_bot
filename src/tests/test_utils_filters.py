@@ -70,3 +70,12 @@ async def test_date_filter_validates_format():
         DATE_INVALID_DAY_IN_MONTH.format(month=2, day=31)
         == message.answers[-1][0]
     )
+
+
+@pytest.mark.asyncio
+async def test_text_required_filter_success():
+    filter_ = TextRequiredFilter()
+    state = FakeFSMContext()
+    message = FakeMessage(text='ok')
+
+    assert await filter_(message, state) is True

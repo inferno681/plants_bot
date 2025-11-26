@@ -97,3 +97,99 @@ async def test_watering_notifications(monkeypatch):
     monkeypatch.setattr(scheduler, 'send_watering_notification', fake_send)
 
     await scheduler.watering_notifications()
+
+
+@pytest.mark.asyncio
+async def test_send_watering_notification_without_id(monkeypatch):
+    plant = Plant(user_id=5, name='Nameless')
+    plant.fertilizing = None
+    plant.next_fertilizing_at = None
+    scheduler.bot = FakeBot()
+    monkeypatch.setattr(scheduler, 'watering_kb', lambda **kwargs: kwargs)
+
+    result = await scheduler.send_watering_notification(plant)
+
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_watering_notifications_empty_list(monkeypatch):
+    async def _empty(cls):
+        return []
+
+    monkeypatch.setattr(
+        scheduler.Plant, 'find_to_water_today', classmethod(_empty)
+    )
+
+    assert await scheduler.watering_notifications() is None
+
+
+class DummyScheduler:
+    def __init__(self, has_job: bool):
+        self.running = False
+        self.started = False
+        self.added_jobs = []
+        self.has_job = has_job
+
+    def start(self):
+        self.started = True
+        self.running = True
+
+    def get_job(self, job_id):
+        return self.has_job
+
+    def add_job(self, *args, **kwargs):
+        self.added_jobs.append(kwargs)
+
+
+@pytest.mark.asyncio
+async def test_start_scheduler_adds_job(monkeypatch):
+    dummy = DummyScheduler(has_job=False)
+    monkeypatch.setattr(scheduler, 'scheduler', dummy)
+
+    await scheduler.start_scheduler()
+
+    assert dummy.started is True
+    assert dummy.added_jobs and dummy.added_jobs[0]['id'] == scheduler.JOB_ID
+
+
+@pytest.mark.asyncio
+async def test_start_scheduler_when_job_exists(monkeypatch):
+    dummy = DummyScheduler(has_job=True)
+    monkeypatch.setattr(scheduler, 'scheduler', dummy)
+
+    await scheduler.start_scheduler()
+
+    assert dummy.added_jobs == []
+
+
+@pytest.mark.asyncio
+async def test_send_watering_notification_logs_error(monkeypatch):
+    plant = build_plant(has_image=False)
+    fake_bot = FakeBot()
+
+    async def raise_send_message(**kwargs):
+        raise RuntimeError('fail')
+
+    fake_bot.send_message = raise_send_message  # type: ignore[assignment]
+    scheduler.bot = fake_bot
+    monkeypatch.setattr(scheduler, 'watering_kb', lambda **kwargs: kwargs)
+
+    assert await scheduler.send_watering_notification(plant) is True
+
+
+@pytest.mark.asyncio
+async def test_start_scheduler_handles_exception(monkeypatch):
+    class RaisingScheduler(DummyScheduler):
+        def start(self):
+            raise RuntimeError('boom')
+
+    dummy = RaisingScheduler(has_job=False)
+    monkeypatch.setattr(scheduler, 'scheduler', dummy)
+
+    await scheduler.start_scheduler()
+
+
+def test_set_bot_sets_global():
+    scheduler.set_bot('bot')  # type: ignore[arg-type]
+    assert scheduler.bot == 'bot'

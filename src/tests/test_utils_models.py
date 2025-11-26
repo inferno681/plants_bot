@@ -97,3 +97,16 @@ async def test_save_plant_creates_document():
     assert stored is not None
     assert stored.warm_period.schedule.weekday == {0, 2}
     assert stored.last_watered_at == date.today()
+
+
+@pytest.mark.asyncio
+async def test_save_plant_sets_last_fertilized_when_in_period():
+    today = date.today()
+    data = build_plant_data()
+    data['fertilizing_start'] = {'day': today.day, 'month': today.month}
+    data['fertilizing_end'] = {'day': today.day, 'month': today.month}
+
+    await save_plant(data, is_fert=True)
+
+    stored = await Plant.find_one(Plant.name == 'Integration')
+    assert stored.last_fertilized_at == today
