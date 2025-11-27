@@ -11,6 +11,7 @@ from bot.utils.handlers import (
     handle_weekly_done,
 )
 from bot.utils.models import save_plant
+from bot.utils.storage import storage_service
 
 __all__ = [
     'save_plant',
@@ -22,4 +23,5 @@ __all__ = [
     'TextRequiredFilter',
     'PhotoRequiredFilter',
     'DateFilter',
+    'storage_service',
 ]

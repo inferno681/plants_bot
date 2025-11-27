@@ -10,3 +10,7 @@ mongodb:
   host: "swissbro.y9tkger.mongodb.net"
   port: 27017
   db: "plants_bot"
+
+storage:
+  bucket: plants
+  endpoint_url: https://storage-wagonbid.ddns.net

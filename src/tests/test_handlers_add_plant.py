@@ -4,7 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from bot.constants import NO_POSITIVE_INT_MSG, add_plant as add_const
+from bot.constants import NO_POSITIVE_INT_MSG
+from bot.constants import add_plant as add_const
 from bot.handlers import add_plant
 from bot.models import Plant
 from bot.states import AddPlant
@@ -75,14 +76,10 @@ async def test_process_warm_period_validation_and_success():
 
     await state.update_data({'warm_start': {'day': 10, 'month': 6}})
     warm_end_message = FakeMessage()
-    await add_plant.process_warm_end(
-        warm_end_message, state, day=5, month=6
-    )
+    await add_plant.process_warm_end(warm_end_message, state, day=5, month=6)
     assert add_const.INVALID_END_DATE_MSG in warm_end_message.answers[-1][0]
 
-    await add_plant.process_warm_end(
-        warm_end_message, state, day=20, month=6
-    )
+    await add_plant.process_warm_end(warm_end_message, state, day=20, month=6)
     assert await state.get_state() == AddPlant.warm_freq_type.state
 
 
@@ -116,7 +113,9 @@ async def test_process_fertilizing_flow(monkeypatch):
 
     callback_message = FakeMessage()
     callback = DummyCallback('days', callback_message)
-    monkeypatch.setattr(add_plant, 'require_message', lambda _: callback_message)
+    monkeypatch.setattr(
+        add_plant, 'require_message', lambda _: callback_message
+    )
 
     await add_plant.process_fertilizing_frequency_type(callback, state)
 
@@ -198,28 +197,38 @@ async def test_warm_and_cold_frequency_wrappers(monkeypatch):
     async def fake_handle_day_of_month(msg, st, prefix):
         called['day_of_month'] = prefix
 
-    monkeypatch.setattr(add_plant, 'handle_frequency_choice', fake_handle_frequency_choice)
+    monkeypatch.setattr(
+        add_plant, 'handle_frequency_choice', fake_handle_frequency_choice
+    )
     await add_plant.process_warm_freq_type(callback, state)
     await add_plant.process_cold_freq_type(callback, state)
     assert called['freq'] == 'cold'
 
     day_callback = SimpleNamespace(idx=1)
-    monkeypatch.setattr(add_plant, 'handle_weekly_days', fake_handle_weekly_days)
+    monkeypatch.setattr(
+        add_plant, 'handle_weekly_days', fake_handle_weekly_days
+    )
     await add_plant.process_warm_weekly_days(callback, day_callback, state)
     await add_plant.process_cold_weekly_days(callback, day_callback, state)
     assert called['weekly_days'] == 'cold'
 
-    monkeypatch.setattr(add_plant, 'handle_weekly_done', fake_handle_weekly_done)
+    monkeypatch.setattr(
+        add_plant, 'handle_weekly_done', fake_handle_weekly_done
+    )
     await add_plant.process_warm_weekly_done(callback, state)
     await add_plant.process_cold_weekly_done(callback, state)
     assert called['weekly_done'] == 'cold'
 
-    monkeypatch.setattr(add_plant, 'handle_biweekly_day', fake_handle_biweekly_day)
+    monkeypatch.setattr(
+        add_plant, 'handle_biweekly_day', fake_handle_biweekly_day
+    )
     await add_plant.process_warm_biweekly_day(callback, day_callback, state)
     await add_plant.process_cold_biweekly_day(callback, day_callback, state)
     assert called['biweekly_day'] == 'cold'
 
-    monkeypatch.setattr(add_plant, 'handle_day_of_month', fake_handle_day_of_month)
+    monkeypatch.setattr(
+        add_plant, 'handle_day_of_month', fake_handle_day_of_month
+    )
     await add_plant.process_warm_day_of_month(message, state)
     await add_plant.process_cold_day_of_month(message, state)
     assert called['day_of_month'] == 'cold'

@@ -164,6 +164,7 @@ class Plant(Document):
     scientific_name: str | None = None
     description: str | None = None
     image: str | None = None
+    storage_key: str | None = None
 
     warm_period: WateringPeriod | None = Field(default_factory=WateringPeriod)
     cold_period: WateringPeriod | None = Field(default_factory=WateringPeriod)

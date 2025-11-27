@@ -16,6 +16,13 @@ class ServiceSettings(BaseModel):
     page_size: int
 
 
+class StorageS3(BaseModel):
+    """S3 settings."""
+
+    bucket: str
+    endpoint_url: str
+
+
 class MongoSettings(BaseModel):
     """MongoDB settings."""
 
@@ -37,6 +44,12 @@ class Secrets(BaseSettings):
     mongo_password: SecretStr = Field(
         default=SecretStr('password'), alias='MONGO_INITDB_ROOT_PASSWORD'
     )
+    aws_access_key: SecretStr = Field(
+        default=SecretStr('minioadmin'), alias='AWS_ACCESS_KEY'
+    )
+    aws_secret_key: SecretStr = Field(
+        default=SecretStr('minioadmin'), alias='AWS_SECRET_KEY'
+    )
 
     model_config = SettingsConfigDict(
         env_file='.env', env_file_encoding='utf-8'
@@ -48,6 +61,7 @@ class AppConfig(BaseSettings):
 
     service: ServiceSettings
     mongodb: MongoSettings
+    storage: StorageS3
     secrets: Secrets
 
     model_config = SettingsConfigDict(

@@ -27,6 +27,7 @@ from bot.utils import (
     handle_weekly_days,
     handle_weekly_done,
     save_plant,
+    storage_service,
 )
 from bot.utils.telegram import (
     require_callback_data,
@@ -88,7 +89,12 @@ async def process_plant_photo(message: Message, state: FSMContext):
     if not photos:
         raise ValueError('Photo is required for this state.')
     file_id = photos[-1].file_id
-    await state.update_data({'image': file_id})
+    file = await message.bot.get_file(file_id)
+
+    key = await storage_service.upload_telegram_file(
+        file.file_path, message.from_user.id
+    )
+    await state.update_data({'image': file_id, 'storage_key': key})
     await message.answer(
         add_plant.ASK_WARM_PERIOD_START_MSG,
         reply_markup=get_cancel_kb(back=True),

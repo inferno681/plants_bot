@@ -89,6 +89,7 @@ async def save_plant(plant_data: Mapping[str, Any], is_fert: bool):
         name=_require_str(plant_data.get('name'), 'name'),
         description=plant_data.get('description'),
         image=plant_data.get('image'),
+        storage_key=plant_data.get('storage_key'),
         warm_period=WateringPeriod(
             start=MonthDay(
                 **_require_mapping(

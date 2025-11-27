@@ -19,7 +19,7 @@ from bot.keyboard import get_cancel_kb, get_main_kb
 from bot.log_message import BACK_ERROR_LOG
 from bot.models import User
 from bot.states import AddPlant
-from bot.utils import save_plant
+from bot.utils import save_plant, storage_service
 from bot.utils.telegram import require_user
 
 router = Router(name='cmd_router')
@@ -59,6 +59,9 @@ async def command_start_handler(message: Message) -> None:
 @router.message(F.text == CANCEL)
 async def cancel_handler(message: Message, state: FSMContext):
     """Cancel handler."""
+    state_data = await state.get_data()
+    if 'storage_key' in state_data:
+        await storage_service.delete_file(state_data.get('storage_key'))
     await state.clear()
     await message.answer(CANCEL, reply_markup=get_main_kb())
 
