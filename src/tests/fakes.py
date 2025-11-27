@@ -55,6 +55,7 @@ class FakeMessage:
         user: SimpleNamespace | None = None,
         text: str | None = None,
         photo: list | None = None,
+        bot: Any | None = None,
     ):
         self.from_user = user or make_user()
         self.text = text
@@ -63,6 +64,7 @@ class FakeMessage:
         self.deleted = False
         self.edited_markup: list[Any] = []
         self.edited_text: list[str] = []
+        self.bot = bot or FakeBot()
 
     async def answer(self, text: str, reply_markup=None):
         self.answers.append((text, reply_markup))
@@ -87,3 +89,8 @@ class FakeCallback:
 
     async def answer(self, text: str = '', **kwargs):
         self.answers.append(text)
+
+
+class FakeBot:
+    async def get_file(self, file_id: str):
+        return SimpleNamespace(file_path=f'{file_id}.jpg')

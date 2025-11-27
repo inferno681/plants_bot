@@ -59,8 +59,17 @@ async def test_process_description_and_photo(monkeypatch):
 
     photo = SimpleNamespace(file_id='file123')
     photo_message = FakeMessage(photo=[photo])
+    async def _fake_upload(*args, **kwargs):
+        return 's3/key'
+
+    monkeypatch.setattr(
+        add_plant.storage_service,
+        'upload_telegram_file',
+        _fake_upload,
+    )
     await add_plant.process_plant_photo(photo_message, state)
     assert state.data['image'] == 'file123'
+    assert state.data['storage_key'] == 's3/key'
     assert await state.get_state() == AddPlant.warm_start.state
 
 
