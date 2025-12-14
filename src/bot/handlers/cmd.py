@@ -1,7 +1,7 @@
 from logging import getLogger
 
 from aiogram import F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
@@ -132,3 +132,13 @@ async def back_handler(message: Message, state: FSMContext):
         STATE_MESSAGES.get(new_state, BACK_TO_PREV_STEP_MSG),
         reply_markup=get_cancel_kb(back=True if history else False),
     )
+
+
+@router.message(Command('send_notifications'))
+async def send_notifications_handler(message: Message):
+    """Send notifications command handler."""
+    await message.answer("Запуск отправки уведомлений...")
+    from bot.scheduler import watering_notifications
+
+    await watering_notifications()
+    await message.answer("Уведомления отправлены.")

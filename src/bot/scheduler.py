@@ -102,8 +102,8 @@ async def start_scheduler():
             scheduler.add_job(
                 watering_notifications,
                 trigger='cron',
-                hour=16,
-                minute=50,
+                hour=10,
+                minute=00,
                 id=JOB_ID,
                 replace_existing=False,
             )

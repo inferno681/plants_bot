@@ -223,7 +223,7 @@ class Plant(Document):
 
     def next_watering_date(self) -> date:
         """Calculate next watering date."""
-        last_watered = self.last_watered_at or date.today()
+        last_watered = date.today()
         last_watered_dt = datetime.combine(last_watered, datetime.min.time())
 
         warm_period = _require_watering_period(self.warm_period)
@@ -261,7 +261,7 @@ class Plant(Document):
     def next_fertilizing_date(self) -> date:
         """Calculate new fertilizing date."""
         fertilizing = _require_fertilizing_period(self.fertilizing)
-        last_fertilized = self.last_fertilized_at or date.today()
+        last_fertilized = date.today()
         fert_start, fert_end = fertilizing.as_period()
 
         frequency = fertilizing.frequency
