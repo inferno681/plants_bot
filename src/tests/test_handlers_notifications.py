@@ -83,6 +83,7 @@ async def test_handle_watering_callback_updates_dates(monkeypatch):
 
     updated = await Plant.get(plant.id)
     assert updated.last_watered_at == date.today()
+    assert updated.next_watering_at and updated.next_watering_at > date.today()
     assert fake_message.captions[0][0] == 'Растение Calathea полито'
     assert callback.answers[-1]['show_alert'] is False
 
@@ -122,3 +123,4 @@ async def test_handle_watering_callback_updates_fertilizing(monkeypatch):
 
     updated = await Plant.get(plant.id)
     assert updated.last_fertilized_at == date.today()
+    assert updated.next_fertilizing_at and updated.next_fertilizing_at > date.today()

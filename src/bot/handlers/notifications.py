@@ -19,11 +19,11 @@ async def handle_watering_callback(
     if not plant:
         await callback.answer("❌ Растение не найдено", show_alert=True)
         return
-    plant.next_watering_date()
     plant.last_watered_at = date.today()
+    plant.next_watering_date()
     if callback_data.is_fertilized:
-        plant.next_fertilizing_date()
         plant.last_fertilized_at = date.today()
+        plant.next_fertilizing_date()
     await plant.save()
     message = require_message(callback)
     await message.edit_caption(
